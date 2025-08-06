@@ -5,28 +5,44 @@
   "main": "package.json",
   "license": "UNLICENSED",
   "scripts": {
-    "dev": "sanity dev",
-    "start": "sanity start",
-    "build": "sanity build",
-    "deploy": "sanity deploy",
-    "deploy-graphql": "sanity graphql deploy"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "sanity:dev": "sanity dev",
+    "sanity:start": "sanity start",
+    "sanity:build": "sanity build",
+    "sanity:deploy": "sanity deploy",
+    "sanity:deploy-graphql": "sanity graphql deploy"
   },
   "keywords": [
-    "sanity"
+    "sanity",
+    "nextjs",
+    "dog-walking"
   ],
   "dependencies": {
+    "@sanity/client": "^6.12.0",
+    "@sanity/image-url": "^1.0.2",
     "@sanity/vision": "^4.3.0",
-    "react": "^19.1",
-    "react-dom": "^19.1",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.1",
+    "@types/react-dom": "^19.1",
+    "autoprefixer": "^10.4.0",
+    "lucide-react": "^0.294.0",
+    "next": "^14.2.31",
+    "postcss": "^8.4.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "sanity": "^4.3.0",
-    "styled-components": "^6.1.18"
+    "styled-components": "^6.1.18",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.8"
   },
   "devDependencies": {
     "@sanity/eslint-config-studio": "^5.0.2",
-    "@types/react": "^19.1",
     "eslint": "^9.28",
-    "prettier": "^3.5",
-    "typescript": "^5.8"
+    "eslint-config-next": "^14.0.0",
+    "prettier": "^3.5"
   },
   "prettier": {
     "semi": false,

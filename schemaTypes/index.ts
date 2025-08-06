@@ -1,5 +1,6 @@
 import { walkPlan } from './walkPlan'
-import { dog } from './dog' // 👈 add this line
-import { client } from './client' 
+import { dog } from './dog'
+import { client } from './client'
+import { walkReport } from './walkReport'
 
-export const schemaTypes = [walkPlan, dog, client]
+export const schemaTypes = [walkPlan, dog, client, walkReport]
