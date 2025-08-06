@@ -19,7 +19,7 @@ export default function HomePage() {
             </h1>
             <p className="text-xl mb-8 max-w-3xl mx-auto">
               GPS-tracked walks with detailed reports. Your dog's safety and happiness 
-              are our top priorities.
+              are our top priorities. 🐕
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/walk-plans" className="btn-primary bg-white text-primary-600 hover:bg-gray-100">
