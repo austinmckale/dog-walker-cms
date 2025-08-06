@@ -1,17 +1,16 @@
-import {defineConfig} from 'sanity'
-import {structureTool} from 'sanity/structure'
-import {visionTool} from '@sanity/vision'
-import {schemaTypes} from './schemaTypes'
+import { defineConfig } from 'sanity'
+import { deskTool } from 'sanity/desk'
+import { visionTool } from '@sanity/vision'
+import { schemaTypes } from './schemaTypes'
 
 export default defineConfig({
   name: 'default',
   title: 'Dog Walker Site',
 
-  projectId: 'ejoan8oy',
+  projectId: 'ejoan8oy', // yours may differ
   dataset: 'production',
 
-  plugins: [structureTool(), visionTool()],
-
+  plugins: [deskTool(), visionTool()],
   schema: {
     types: schemaTypes,
   },
