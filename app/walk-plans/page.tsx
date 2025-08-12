@@ -1,7 +1,6 @@
 import { WalkPlan } from '@/types'
 import WalkPlanCard from '@/components/WalkPlanCard'
 import Navigation from '@/components/Navigation'
-import { MapPin, Clock, DollarSign } from 'lucide-react'
 
 // Actual walk offerings
 const walkPlans: WalkPlan[] = [
@@ -42,32 +41,9 @@ export default function WalkPlansPage() {
             Walk Plans
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Choose from our variety of walk plans designed to meet your dog's needs. 
-            All walks include GPS tracking and detailed reports.
+            Choose from our variety of walk plans designed to meet your dog's needs.
           </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white rounded-lg p-6 text-center">
-            <MapPin className="h-8 w-8 text-primary-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">{walkPlans.length}</div>
-            <div className="text-gray-600">Available Plans</div>
-          </div>
-          <div className="bg-white rounded-lg p-6 text-center">
-            <Clock className="h-8 w-8 text-primary-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">
-              {walkPlans.reduce((total, plan) => total + plan.duration, 0)} min
-            </div>
-            <div className="text-gray-600">Total Walk Time</div>
-          </div>
-          <div className="bg-white rounded-lg p-6 text-center">
-            <DollarSign className="h-8 w-8 text-primary-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">
-              ${walkPlans.reduce((total, plan) => total + plan.price, 0)}
-            </div>
-            <div className="text-gray-600">Total Value</div>
-          </div>
+          <p className="mt-2 text-gray-700">GPS tracking & photo update: Included</p>
         </div>
 
         {/* Walk Plans Grid */}

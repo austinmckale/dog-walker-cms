@@ -66,7 +66,7 @@ export default function WalkPlanCard({ walkPlan, onClick }: WalkPlanCardProps) {
       </div>
       
       <div className="mt-4 pt-4 border-t border-gray-100">
-        <Link href="/book" className="w-full btn-primary block text-center">
+        <Link href={`/book/walk?length=${walkPlan.duration}`} className="w-full btn-primary block text-center">
           Book This Plan
         </Link>
       </div>
