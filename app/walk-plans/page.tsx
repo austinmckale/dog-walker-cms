@@ -101,12 +101,16 @@ export default function WalkPlansPage() {
             <p className="text-gray-600 mb-6">
               Contact us to create a personalized walk plan for your dog's specific needs.
             </p>
-            <button className="btn-primary">
-              Contact Us
-            </button>
+            <a
+              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'hello@berksbestfriend.com'}`}
+              className="btn-primary"
+              rel="noopener noreferrer"
+            >
+              Email Us
+            </a>
           </div>
         </div>
       </main>
     </div>
   )
-} 
+}

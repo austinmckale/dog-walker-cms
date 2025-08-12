@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { WalkPlan } from '@/types'
 import { Clock, DollarSign, MapPin } from 'lucide-react'
 
@@ -65,10 +66,10 @@ export default function WalkPlanCard({ walkPlan, onClick }: WalkPlanCardProps) {
       </div>
       
       <div className="mt-4 pt-4 border-t border-gray-100">
-        <button className="w-full btn-primary">
+        <Link href="/book" className="w-full btn-primary block text-center">
           Book This Plan
-        </button>
+        </Link>
       </div>
     </div>
   )
-} 
+}

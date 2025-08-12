@@ -37,6 +37,12 @@ A modern, professional dog walking business website built with Next.js, TypeScri
    NEXT_PUBLIC_SANITY_PROJECT_ID=your-project-id
    NEXT_PUBLIC_SANITY_DATASET=production
    SANITY_API_TOKEN=your-api-token
+   NEXT_PUBLIC_SITE_NAME="Berks Best Friend Transport"
+   NEXT_PUBLIC_SUPPORT_PHONE="+1484444XXXX"
+   NEXT_PUBLIC_SUPPORT_EMAIL="hello@berksbestfriend.com"
+   NEXT_PUBLIC_MAP_PROVIDER="leaflet"
+   NEXT_PUBLIC_MAPBOX_TOKEN=""
+   NEXT_PUBLIC_BASE_URL="http://localhost:3000"
    ```
 
 4. **Start the development server**

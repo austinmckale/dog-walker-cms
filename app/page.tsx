@@ -21,12 +21,18 @@ export default function HomePage() {
               GPS-tracked walks with detailed reports. Your dog's safety and happiness 
               are our top priorities. 🐕
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
               <Link href="/walk-plans" className="btn-primary bg-white text-primary-600 hover:bg-gray-100">
                 View Walk Plans
               </Link>
               <Link href="/dogs" className="btn-secondary bg-transparent border-white text-white hover:bg-white hover:text-primary-600">
                 Manage Dogs
+              </Link>
+              <Link href="/book" className="btn-primary bg-primary-700 text-white hover:bg-primary-800">
+                Book Transport
+              </Link>
+              <Link href="/walks/new" className="btn-secondary bg-transparent border-white text-white hover:bg-white hover:text-primary-600">
+                Request a Walk
               </Link>
             </div>
           </div>
@@ -121,6 +127,29 @@ export default function HomePage() {
           <Link href="/walk-plans" className="btn-primary">
             View Walk Plans
           </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <a
+              href={`tel:${process.env.NEXT_PUBLIC_SUPPORT_PHONE || '+1484444XXXX'}`}
+              className="btn-secondary"
+              rel="noopener noreferrer"
+            >
+              Call
+            </a>
+            <a
+              href={`sms:${process.env.NEXT_PUBLIC_SUPPORT_PHONE || '+1484444XXXX'}`}
+              className="btn-secondary"
+              rel="noopener noreferrer"
+            >
+              Text
+            </a>
+            <a
+              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'hello@berksbestfriend.com'}`}
+              className="btn-secondary"
+              rel="noopener noreferrer"
+            >
+              Email
+            </a>
+          </div>
         </div>
       </section>
     </div>
