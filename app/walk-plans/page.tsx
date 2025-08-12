@@ -3,46 +3,34 @@ import WalkPlanCard from '@/components/WalkPlanCard'
 import Navigation from '@/components/Navigation'
 import { MapPin, Clock, DollarSign } from 'lucide-react'
 
-// Mock data for demonstration
-const mockWalkPlans: WalkPlan[] = [
+// Actual walk offerings
+const walkPlans: WalkPlan[] = [
   {
-    _id: '1',
-    title: 'Quick Walk',
-    slug: 'quick-walk',
-    price: 15,
-    duration: 15,
-    description: 'Perfect for busy schedules. A quick 15-minute walk to get your dog moving and relieve themselves.',
-    features: ['GPS Tracking', 'Photo Report', 'Basic Notes'],
+    _id: '30',
+    title: '30-Minute Walk',
+    slug: '30-minute-walk',
+    price: 30,
+    duration: 30,
+    description:
+      'A half-hour neighborhood stroll with plenty of sniffing, exercise, and a photo report.',
+    features: ['GPS Tracking', 'Photo Report', 'Detailed Notes'],
     isActive: true,
     sortOrder: 1,
   },
   {
-    _id: '2',
-    title: 'Standard Walk',
-    slug: 'standard-walk',
-    price: 25,
-    duration: 30,
-    description: 'Our most popular option. A 30-minute walk with plenty of exercise and exploration time.',
-    features: ['GPS Tracking', 'Photo Report', 'Detailed Notes', 'Route Map'],
+    _id: '45',
+    title: '45-Minute Walk',
+    slug: '45-minute-walk',
+    price: 40,
+    duration: 45,
+    description: 'Extra time for high‑energy pups who need a longer adventure.',
+    features: ['GPS Tracking', 'Photo Report', 'Detailed Notes'],
     isActive: true,
     sortOrder: 2,
-  },
-  {
-    _id: '3',
-    title: 'Adventure Walk',
-    slug: 'adventure-walk',
-    price: 35,
-    duration: 60,
-    description: 'Extended walk perfect for high-energy dogs. Includes extra playtime and training exercises.',
-    features: ['GPS Tracking', 'Photo Report', 'Detailed Notes', 'Route Map', 'Training Tips'],
-    isActive: true,
-    sortOrder: 3,
   },
 ]
 
 export default function WalkPlansPage() {
-  const walkPlans = mockWalkPlans
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -85,12 +73,103 @@ export default function WalkPlansPage() {
         {/* Walk Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {walkPlans.map((walkPlan) => (
-            <WalkPlanCard 
-              key={walkPlan._id} 
-              walkPlan={walkPlan}
-            />
+            <WalkPlanCard key={walkPlan._id} walkPlan={walkPlan} />
           ))}
         </div>
+
+        {/* Subscription Packages – 30-Minute Walks */}
+        <section className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+            Subscription Packages – 30-Minute Walks
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">
+                    Walks per Week
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">
+                    Regular Price
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">
+                    Subscription Price
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">
+                    Price per Walk
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td className="px-4 py-2">2 walks</td>
+                  <td className="px-4 py-2">$60</td>
+                  <td className="px-4 py-2 font-semibold">$55</td>
+                  <td className="px-4 py-2">$27.50</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-2">3 walks</td>
+                  <td className="px-4 py-2">$90</td>
+                  <td className="px-4 py-2 font-semibold">$78</td>
+                  <td className="px-4 py-2">$26.00</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-2">5 walks</td>
+                  <td className="px-4 py-2">$150</td>
+                  <td className="px-4 py-2 font-semibold">$125</td>
+                  <td className="px-4 py-2">$25.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Subscription Packages – 45-Minute Walks */}
+        <section className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+            Subscription Packages – 45-Minute Walks
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">
+                    Walks per Week
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">
+                    Regular Price
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">
+                    Subscription Price
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">
+                    Price per Walk
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td className="px-4 py-2">2 walks</td>
+                  <td className="px-4 py-2">$80</td>
+                  <td className="px-4 py-2 font-semibold">$72</td>
+                  <td className="px-4 py-2">$36.00</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-2">3 walks</td>
+                  <td className="px-4 py-2">$120</td>
+                  <td className="px-4 py-2 font-semibold">$105</td>
+                  <td className="px-4 py-2">$35.00</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-2">5 walks</td>
+                  <td className="px-4 py-2">$200</td>
+                  <td className="px-4 py-2 font-semibold">$175</td>
+                  <td className="px-4 py-2">$35.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         {/* Call to Action */}
         <div className="mt-16 text-center">
