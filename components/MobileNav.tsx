@@ -8,7 +8,7 @@ const items = [
   {name: 'Home', href: '/', icon: Home},
   {name: 'Walks', href: '/walks', icon: Map},
   {name: 'Clients', href: '/dogs', icon: Users},
-  {name: 'Profile', href: '/profile', icon: User},
+  {name: 'Sign In', href: '/signin', icon: User},
 ]
 
 export default function MobileNav() {

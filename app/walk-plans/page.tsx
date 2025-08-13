@@ -41,7 +41,7 @@ export default function WalkPlansPage() {
             Walk Plans
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Choose from our variety of walk plans designed to meet your dog's needs.
+            Choose from our variety of walk plans designed to meet your dog&apos;s needs.
           </p>
           <p className="mt-2 text-gray-700">GPS tracking & photo update: Included</p>
         </div>
@@ -154,7 +154,7 @@ export default function WalkPlansPage() {
               Need a Custom Walk Plan?
             </h2>
             <p className="text-gray-600 mb-6">
-              Contact us to create a personalized walk plan for your dog's specific needs.
+              Contact us to create a personalized walk plan for your dog&apos;s specific needs.
             </p>
             <a
               href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'hello@berksbestfriend.com'}`}

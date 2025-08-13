@@ -18,7 +18,7 @@ export default function HomePage() {
               Berks County Dog Walking Services
             </h1>
             <p className="text-xl mb-8 max-w-3xl mx-auto">
-              GPS-tracked walks with detailed reports. Your dog's safety and happiness 
+              GPS-tracked walks with detailed reports. Your dog&apos;s safety and happiness 
               are our top priorities. 🐕
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
@@ -68,7 +68,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Flexible Duration</h3>
               <p className="text-gray-600">
-                Choose from 15-minute quick walks to 1-hour adventure walks based on your dog's needs.
+                Choose from 15-minute quick walks to 1-hour adventure walks based on your dog&apos;s needs.
               </p>
             </div>
 
@@ -88,7 +88,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Insured & Bonded</h3>
               <p className="text-gray-600">
-                Your dog's safety is protected with comprehensive insurance coverage.
+                Your dog&apos;s safety is protected with comprehensive insurance coverage.
               </p>
             </div>
 

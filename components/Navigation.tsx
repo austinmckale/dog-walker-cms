@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { PawPrint, MapPin, Users, FileText } from 'lucide-react'
+import { PawPrint, MapPin, Users, FileText, User } from 'lucide-react'
 
 const navigation = [
   { name: 'Home', href: '/', icon: PawPrint },
   { name: 'Walk Plans', href: '/walk-plans', icon: MapPin },
   { name: 'Dogs', href: '/dogs', icon: Users },
   { name: 'Reports', href: '/reports', icon: FileText },
+  { name: 'Sign In', href: '/signin', icon: User },
 ]
 
 export default function Navigation() {

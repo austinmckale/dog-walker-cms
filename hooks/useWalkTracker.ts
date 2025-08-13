@@ -14,7 +14,7 @@ const haversine = (a: Point, b: Point) => {
   return 2 * R * Math.asin(Math.sqrt(h));
 };
 
-export function useWalkTracker() {
+export function useWalkTracker(opts?: { dogId?: string }) {
   const [walkId, setWalkId] = useState<string|null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [distanceM, setDistanceM] = useState(0);
@@ -40,7 +40,11 @@ export function useWalkTracker() {
   }
 
   async function start() {
-    const res = await fetch("/api/walks/start", { method: "POST" });
+    const res = await fetch("/api/walks/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dogId: opts?.dogId ?? null })
+    });
     if (!res.ok) { alert("Please sign in first."); return; }
     const { walkId } = await res.json();
     setWalkId(walkId); setIsTracking(true);
