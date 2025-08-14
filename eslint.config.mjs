@@ -1,8 +1,6 @@
-import studio from '@sanity/eslint-config-studio'
 import next from 'eslint-config-next'
 
-// Apply Next.js recommended rules to the app, alongside Sanity studio config
+// Apply Next.js recommended rules. Sanity studio config is optional and omitted in CI.
 export default [
   ...next(),
-  ...studio,
 ]

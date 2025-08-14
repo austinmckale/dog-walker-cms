@@ -22,10 +22,11 @@ export default function AuthCallbackPage() {
         if (session) {
           // Set server-side cookies so SSR pages see the session
           try {
+            const remember = search.get('remember') === '1';
             await fetch('/api/auth/session', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token })
+              body: JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token, remember })
             });
           } catch {}
           router.replace('/dashboard');

@@ -42,10 +42,11 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading("email"); setMessage(undefined);
     const email = mlEmail || signInForm.getValues("email");
-    const {error} = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: authCallback } });
+    const url = authCallback ? authCallback + (remember ? "?remember=1" : "") : undefined;
+    const {error} = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: url } });
     setLoading(null);
     setMessage(error ? error.message : "Check your email for the magic link.");
-  }, [mlEmail, signInForm, authCallback]);
+  }, [mlEmail, signInForm, authCallback, remember]);
 
   const onPasswordSignIn = useCallback(async (values: SignInValues) => {
     setLoading("password"); setMessage(undefined);
@@ -90,10 +91,11 @@ export default function AuthPage() {
 
   const onOAuth = useCallback(async (provider: 'google'|'github') => {
     setLoading(provider);
-    const {error} = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: authCallback } });
+    const redirectTo = authCallback ? authCallback + (remember ? "?remember=1" : "") : undefined;
+    const {error} = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
     setLoading(null);
     if (error) setMessage(error.message);
-  }, [authCallback]);
+  }, [authCallback, remember]);
 
   useEffect(() => {
     try {
