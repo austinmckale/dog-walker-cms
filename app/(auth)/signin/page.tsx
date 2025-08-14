@@ -68,7 +68,7 @@ export default function AuthPage() {
     } finally {
       setLoading(null);
     }
-    window.location.assign("/dashboard");
+    window.location.assign("/");
   }, [remember]);
 
   const onSignUp = useCallback(async (values: SignUpValues) => {
@@ -85,7 +85,7 @@ export default function AuthPage() {
           body: JSON.stringify({ access_token: data.session.access_token, refresh_token: data.session.refresh_token, remember: true })
         });
       }
-      window.location.assign("/dashboard");
+      window.location.assign("/");
     }
   }, [authCallback]);
 

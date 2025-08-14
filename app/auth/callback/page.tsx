@@ -29,7 +29,7 @@ export default function AuthCallbackPage() {
               body: JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token, remember })
             });
           } catch {}
-          router.replace('/dashboard');
+          router.replace('/');
         } else {
           setMessage('Could not complete sign-in. Try again.');
         }
@@ -45,7 +45,8 @@ export default function AuthCallbackPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-sm p-6 text-center">
         <h1 className="text-xl font-semibold mb-2">Signing you in…</h1>
-        <p className="text-sm text-gray-600">{message}</p>
+        <p className="text-sm text-gray-600 mb-4">{message}</p>
+        <a href="/" className="btn-secondary inline-block">Go to home</a>
       </div>
     </div>
   );
