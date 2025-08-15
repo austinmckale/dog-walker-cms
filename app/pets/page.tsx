@@ -13,10 +13,27 @@ export default async function PetsPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/signin')
 
-  const { data: pets = [] } = await supabase
+  type Pet = {
+    id: string
+    owner_id: string
+    name: string
+    species: string | null
+    breed: string | null
+    sex: string | null
+    weight_kg: number | null
+    dob: string | null
+    notes: string | null
+    photo_url: string | null
+    created_at: string
+  }
+
+  const { data: petsData, error: petsError } = await supabase
     .from('pets')
-    .select('id,name,species,breed,photo_url,created_at')
+    .select('id,owner_id,name,species,breed,sex,weight_kg,dob,notes,photo_url,created_at')
     .order('created_at', { ascending: false })
+    .returns<Pet[]>()
+
+  const pets: Pet[] = petsData ?? []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,8 +55,8 @@ export default async function PetsPage() {
             </div>
           </div>
         ) : (
-          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pets.map((pet: any) => (
+          <ul className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {pets.map((pet) => (
               <li key={pet.id}>
                 <PetCard pet={pet} />
               </li>
