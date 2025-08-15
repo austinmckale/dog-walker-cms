@@ -80,6 +80,10 @@ function NavItems({ pathname }: { pathname: string }) {
         <MapPin className="h-4 w-4" />
         <span>Walk Plans</span>
       </LinkItem>
+      <LinkItem href="/schedule">
+        <MapPin className="h-4 w-4" />
+        <span>Schedule</span>
+      </LinkItem>
       {isAuthed && (
         <LinkItem href="/dogs">
           <Users className="h-4 w-4" />
