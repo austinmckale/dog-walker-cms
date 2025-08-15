@@ -1,22 +1,33 @@
-'use client'
+"use client"
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
 import {Home, Map, Users, User} from 'lucide-react'
-
-const items = [
-  {name: 'Home', href: '/', icon: Home},
-  {name: 'Walks', href: '/walks', icon: Map},
-  {name: 'Clients', href: '/dogs', icon: Users},
-  {name: 'Sign In', href: '/signin', icon: User},
-]
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 
 export default function MobileNav() {
   const pathname = usePathname()
+  const [isAuthed, setIsAuthed] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    supabase.auth.getUser().then(({ data }) => mounted && setIsAuthed(!!data.user))
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setIsAuthed(!!session?.user))
+    return () => sub.subscription.unsubscribe()
+  }, [])
+
+  const items = [
+    {name: 'Home', href: '/', icon: Home, show: true},
+    {name: 'Walks', href: '/walks', icon: Map, show: true},
+    {name: 'Clients', href: '/dogs', icon: Users, show: isAuthed},
+    {name: 'Sign In', href: '/signin', icon: User, show: !isAuthed},
+  ] as const
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow md:hidden">
       <ul className="flex justify-around" role="menubar">
-        {items.map((item) => {
+        {items.filter(i => i.show).map((item) => {
           const isActive = pathname === item.href
           return (
             <li key={item.name} className="flex-1" role="none">

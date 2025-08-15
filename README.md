@@ -160,6 +160,12 @@ The website is fully responsive and works on:
 2. Set environment variables in Vercel dashboard
 3. Deploy automatically on push to main branch
 
+### Deploy Notes
+- Install command is managed via `vercel.json` and includes devDependencies: `npm ci`.
+- Node version: use Node 20 (see `.nvmrc`); `package.json` engines restrict to Node <21.
+- Do not set `output: 'export'` in `next.config.js` (dynamic routes present).
+- OAuth callback at `/auth/callback` uses a client component within `Suspense` and is marked dynamic.
+
 ### Other Platforms
 The Next.js app can be deployed to any platform that supports Node.js:
 - Netlify

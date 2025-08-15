@@ -128,27 +128,9 @@ export default function HomePage() {
             View Walk Plans
           </Link>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <a
-              href={`tel:${process.env.NEXT_PUBLIC_SUPPORT_PHONE || '+1484444XXXX'}`}
-              className="btn-secondary"
-              rel="noopener noreferrer"
-            >
-              Call
-            </a>
-            <a
-              href={`sms:${process.env.NEXT_PUBLIC_SUPPORT_PHONE || '+1484444XXXX'}`}
-              className="btn-secondary"
-              rel="noopener noreferrer"
-            >
-              Text
-            </a>
-            <a
-              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'hello@berksbestfriend.com'}`}
-              className="btn-secondary"
-              rel="noopener noreferrer"
-            >
-              Email
-            </a>
+            <a href="tel:+16104514099" className="btn-secondary">Call</a>
+            <a href="sms:+16104514099" className="btn-secondary">Text</a>
+            <a href="mailto:austinmck17@gmail.com" className="btn-secondary">Email</a>
           </div>
         </div>
       </section>

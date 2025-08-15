@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Navigation from '@/components/Navigation'
 import { createSupabaseServer } from '@/lib/supabase/server'
 import { client, urlFor } from '@/lib/sanity'
+import { redirect } from 'next/navigation'
 
 type DogLite = {
   _id: string
@@ -15,19 +16,7 @@ type DogLite = {
 export default async function DogsPage() {
   const supabase = createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    // Server component redirect to signin
-    // eslint-disable-next-line @next/next/no-html-link-for-pages
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <main className="max-w-3xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-semibold mb-4">Dog Profiles</h1>
-          <p className="text-gray-600">Please <a href="/signin" className="text-primary-600 underline">sign in</a> to view your dogs.</p>
-        </main>
-      </div>
-    )
-  }
+  if (!user) redirect('/signin')
 
   const dogs = await client.fetch<DogLite[]>(
     `*[_type == "dog" && isActive == true && ownerEmail == $email] | order(name asc){ _id, name, breed, image, ownerEmail }`,
@@ -74,6 +63,18 @@ export default async function DogsPage() {
             ))}
           </ul>
         )}
+      </main>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <section className="mt-16">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900">Reports</h2>
+            <p className="text-gray-600">Walk reports and analytics will be available soon.</p>
+          </div>
+          <div className="bg-white rounded-lg p-8 max-w-md mx-auto text-center border border-gray-200">
+            <p className="text-gray-700 mb-2">Coming Soon</p>
+            <p className="text-gray-600 text-sm">This will include detailed walk logs, GPS routes, photos, and performance metrics.</p>
+          </div>
+        </section>
       </main>
     </div>
   )
