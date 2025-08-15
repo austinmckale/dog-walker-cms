@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import AddPetModal from '@/components/pets/AddPetModal'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function PetsPage() {
   const supabase = createSupabaseServer()
@@ -32,6 +33,11 @@ export default async function PetsPage() {
     .select('id,owner_id,name,species,breed,sex,weight_kg,dob,notes,photo_url,created_at')
     .order('created_at', { ascending: false })
     .returns<Pet[]>()
+
+  if (petsError) {
+    console.error('[/pets] Supabase error:', petsError)
+    throw petsError
+  }
 
   const pets: Pet[] = petsData ?? []
 

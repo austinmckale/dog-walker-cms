@@ -15,6 +15,7 @@ type VisitReport = {
 }
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function PetDetailPage({ params }: { params: { id: string } }) {
   const supabase = createSupabaseServer()
@@ -29,6 +30,9 @@ export default async function PetDetailPage({ params }: { params: { id: string }
     .select('id,name,species,breed,notes,photo_url,created_at')
     .eq('id', petId)
     .single()
+  if (petErr) {
+    console.error('[/pets/[id]] Supabase error (pet):', petErr)
+  }
   if (petErr || !pet) notFound()
 
   const { data: reportsData, error: reportsError } = await supabase
@@ -37,6 +41,9 @@ export default async function PetDetailPage({ params }: { params: { id: string }
     .eq('pet_id', pet.id)
     .order('happened_at', { ascending: false })
     .returns<VisitReport[]>()
+  if (reportsError) {
+    console.error('[/pets/[id]] Supabase error (reports):', reportsError)
+  }
   const reports: VisitReport[] = reportsData ?? []
 
   return (
