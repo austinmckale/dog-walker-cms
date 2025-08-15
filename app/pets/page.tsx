@@ -50,9 +50,3 @@ export default async function PetsPage() {
     </div>
   )
 }
-
-function AddPetModal() {
-  return (
-    <Link href="#add-pet" className="btn-primary">Add Pet</Link>
-  )
-}
