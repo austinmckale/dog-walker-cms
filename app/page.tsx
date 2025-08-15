@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import Navigation from '@/components/Navigation'
 import { PawPrint, MapPin, Clock, Shield, Users, FileText } from 'lucide-react'
 
@@ -7,33 +8,66 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
-            <div className="flex justify-center mb-6">
-              <PawPrint className="h-16 w-16" />
-            </div>
-            <h1 className="text-5xl font-bold mb-6">
+      {/* WAVE-CUT HERO */}
+      <section className="relative isolate min-h-[68vh] sm:min-h-[76vh] overflow-hidden">
+        {/* Background photo */}
+        <Image
+          src="/hero-dog.jpg"
+          alt="Golden retriever in a creek carrying a stick"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[50%_35%]"
+        />
+
+        {/* Contrast overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/20" />
+
+        {/* Floating glass card */}
+        <div className="relative z-10 mx-auto max-w-5xl px-4">
+          <div className="mt-20 sm:mt-28 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 shadow-xl p-6 sm:p-10 text-center text-white">
+            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight">
               Berks County Dog Walking Services
             </h1>
-            <p className="text-xl mb-8 max-w-3xl mx-auto">
-              GPS-tracked walks with detailed reports. Your dog&apos;s safety and happiness 
-              are our top priorities. 🐕
+            <p className="mt-4 text-lg sm:text-xl opacity-95">
+              GPS-tracked walks with detailed reports. Your dog’s safety and happiness are our top priorities.
             </p>
-            <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
-              <Link href="/walk-plans" className="btn-primary bg-white text-primary-600 hover:bg-gray-100">
+
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/walk-plans"
+                className="rounded-lg bg-white/95 text-gray-900 px-5 py-2.5 font-medium shadow hover:bg-white"
+              >
                 View Walk Plans
               </Link>
-              <Link href="/schedule?service=transport" className="btn-primary bg-primary-700 text-white hover:bg-primary-800">
+              <Link
+                href="/schedule?service=transport"
+                className="rounded-lg bg-blue-600/90 px-5 py-2.5 font-medium shadow hover:bg-blue-700"
+              >
                 Book Transport
               </Link>
-              <Link href="/schedule?service=walk" className="btn-secondary bg-transparent border-white text-white hover:bg-white hover:text-primary-600">
+              <Link
+                href="/schedule?service=walk"
+                className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium shadow hover:bg-blue-700"
+              >
                 Request a Walk
               </Link>
             </div>
           </div>
         </div>
+
+        {/* Wave separator to next section */}
+        <svg
+          className="absolute bottom-[-1px] left-0 right-0 z-10"
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            fill="white"
+            d="M0,64L60,74.7C120,85,240,107,360,106.7C480,107,600,85,720,69.3C840,53,960,43,1080,58.7C1200,75,1320,117,1380,138.7L1440,160L1440,120L1380,120C1320,120,1200,120,1080,120C960,120,840,120,720,120C600,120,480,120,360,120C240,120,120,120,60,120L0,120Z"
+          />
+        </svg>
       </section>
 
       {/* Features Section */}

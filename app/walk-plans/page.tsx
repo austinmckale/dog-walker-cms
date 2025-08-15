@@ -1,5 +1,33 @@
 import { WalkPlan } from '@/types'
 import WalkPlanCard from '@/components/WalkPlanCard'
+
+// By default, leave Stripe price IDs undefined so the UI uses Payment Links fallback out of the box.
+const PRICES: {
+  ONE_30?: string
+  ONE_45?: string
+  SUB_30: Record<'2' | '3' | '5', string | undefined>
+  SUB_45: Record<'2' | '3' | '5', string | undefined>
+} = {
+  // One-time prices (Stripe) — fill with your real price IDs to enable Checkout Sessions
+  ONE_30: undefined,
+  ONE_45: undefined,
+  // Subscriptions (Stripe)
+  SUB_30: { '2': undefined, '3': undefined, '5': undefined },
+  SUB_45: { '2': undefined, '3': undefined, '5': undefined },
+}
+
+// Optional: Payment Link fallback URLs (if using Payment Links)
+const LINKS: {
+  ONE_30?: string
+  ONE_45?: string
+  SUB_30: Record<'2' | '3' | '5', string | undefined>
+  SUB_45: Record<'2' | '3' | '5', string | undefined>
+} = {
+  ONE_30: 'https://buy.stripe.com/your_link_30',
+  ONE_45: 'https://buy.stripe.com/your_link_45',
+  SUB_30: { '2': 'https://buy.stripe.com/your_link_s30_2', '3': 'https://buy.stripe.com/your_link_s30_3', '5': 'https://buy.stripe.com/your_link_s30_5' },
+  SUB_45: { '2': 'https://buy.stripe.com/your_link_s45_2', '3': 'https://buy.stripe.com/your_link_s45_3', '5': 'https://buy.stripe.com/your_link_s45_5' },
+}
 import Navigation from '@/components/Navigation'
 
 // Actual walk offerings
@@ -49,9 +77,19 @@ export default function WalkPlansPage() {
         {/* Walk Plans Grid */}
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 place-items-center">
-          {walkPlans.map((walkPlan) => (
-            <WalkPlanCard key={walkPlan._id} walkPlan={walkPlan} />
-          ))}
+          {walkPlans.map((walkPlan) => {
+            const is30 = walkPlan.duration === 30
+            return (
+              <WalkPlanCard
+                key={walkPlan._id}
+                walkPlan={walkPlan}
+                oneTimePriceId={is30 ? PRICES.ONE_30 : PRICES.ONE_45}
+                oneTimePaymentLink={is30 ? LINKS.ONE_30 : LINKS.ONE_45}
+                subPriceMap={is30 ? PRICES.SUB_30 : PRICES.SUB_45}
+                subLinkMap={is30 ? LINKS.SUB_30 : LINKS.SUB_45}
+              />
+            )
+          })}
           </div>
         </div>
 

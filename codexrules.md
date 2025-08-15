@@ -1,159 +1,264 @@
-Prompt for Codex/Cursor
+Codex/Cursor Prompt — Add Stripe payments + subscription picker to Walk Plans
 
-We have a Next.js 14 (App Router) + Supabase app. /pets works locally but throws a server-side error on Vercel. Likely causes: missing Supabase env vars in Vercel, or static prerender on an auth page (cookies) in production.
+We’re in a Next.js 14 (App Router) repo. Implement payments for the two walk plans with Stripe and add a subscription dropdown (2/3/5 walks per week) under each plan.
 
-Do the following changes:
-1) Add strict env validation (server & client)
+Requirements
 
-Create lib/env.ts:
+Support two modes:
 
-// lib/env.ts
-const required = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"] as const;
+Payment Links (zero-code fallback): if we set USE_PAYMENT_LINKS=true or no Stripe secret is present, buttons should go straight to the provided Payment Link URLs.
 
-export function getEnv() {
-  const env: Record<string, string> = {};
-  for (const k of required) {
-    const v = process.env[k];
-    if (!v) {
-      // Throw a clear error (will show in Vercel function logs)
-      throw new Error(`[ENV MISSING] Set ${k} in Vercel → Project → Settings → Environment Variables`);
+Stripe Checkout Sessions (preferred): create a Checkout Session via API and redirect.
+
+One-time buttons: “Book This Plan” ($30 for 30-min, $40 for 45-min).
+
+Subscription dropdown (2/3/5 walks per week) + “Subscribe” button for each plan.
+
+After successful checkout, redirect to /schedule?paid=1&service=walk&duration=<30|45>.
+
+Keep the current page layout/styles; only add button wiring + dropdown UI.
+
+0) Install & env
+
+Add dep:
+
+npm i stripe
+
+
+Env (local .env.local and Vercel):
+
+STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_SUCCESS_URL=https://<your-domain>/schedule?paid=1
+NEXT_PUBLIC_CANCEL_URL=https://<your-domain>/walk-plans
+USE_PAYMENT_LINKS=false
+
+1) API route – app/api/checkout/route.ts
+
+Create a Checkout Session for one-time or subscription:
+
+import Stripe from 'stripe';
+import { NextResponse } from 'next/server';
+
+const canUseStripe = !!process.env.STRIPE_SECRET_KEY && process.env.USE_PAYMENT_LINKS !== 'true';
+
+const stripe = canUseStripe
+  ? new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
+  : null;
+
+export async function POST(req: Request) {
+  try {
+    if (!stripe) {
+      return NextResponse.json({ error: 'Stripe disabled (using Payment Links).' }, { status: 400 });
     }
-    env[k] = v;
+    const { priceId, mode = 'payment', metadata } = await req.json();
+
+    if (!priceId) return NextResponse.json({ error: 'Missing priceId' }, { status: 400 });
+
+    const successBase = process.env.NEXT_PUBLIC_SUCCESS_URL ?? 'http://localhost:3000/schedule?paid=1';
+    const cancelUrl = process.env.NEXT_PUBLIC_CANCEL_URL ?? 'http://localhost:3000/walk-plans';
+
+    const duration = metadata?.duration ? `&duration=${metadata.duration}` : '';
+
+    const session = await stripe.checkout.sessions.create({
+      mode, // 'payment' | 'subscription'
+      line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
+      automatic_tax: { enabled: false },
+      success_url: `${successBase}${duration}`,
+      cancel_url: cancelUrl,
+      metadata,
+    });
+
+    return NextResponse.json({ url: session.url });
+  } catch (e: any) {
+    console.error('Stripe checkout error:', e);
+    return NextResponse.json({ error: e.message ?? 'Checkout failed' }, { status: 500 });
   }
-  return env as { NEXT_PUBLIC_SUPABASE_URL: string; NEXT_PUBLIC_SUPABASE_ANON_KEY: string };
 }
 
+2) Client helpers – components/CheckoutButton.tsx + components/SubscriptionPicker.tsx
+// components/CheckoutButton.tsx
+'use client';
+import { useState } from 'react';
 
-Create .env.example at repo root:
+export default function CheckoutButton({
+  label,
+  priceId,
+  mode = 'payment',
+  durationMinutes,
+  paymentLink, // optional fallback URL
+  className = '',
+}: {
+  label: string;
+  priceId?: string;
+  mode?: 'payment' | 'subscription';
+  durationMinutes?: 30 | 45;
+  paymentLink?: string;
+  className?: string;
+}) {
+  const [loading, setLoading] = useState(false);
+  const useLinks = process.env.NEXT_PUBLIC_USE_PAYMENT_LINKS === 'true';
 
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+  async function go() {
+    setLoading(true);
 
-2) Centralize Supabase clients
+    // Fallback: use Payment Link URL when configured
+    if (useLinks || !priceId) {
+      if (!paymentLink) {
+        alert('Payment link not configured.');
+        setLoading(false);
+        return;
+      }
+      window.location.href = paymentLink;
+      return;
+    }
 
-Create lib/supabase/server.ts and lib/supabase/client.ts:
-
-// lib/supabase/server.ts
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import type { Database } from "@/types/supabase"; // if you don’t have types, remove <Database>
-import { getEnv } from "@/lib/env";
-
-export function getSupabaseServer() {
-  // Ensure env exists; throws helpful error in prod if missing
-  getEnv();
-  return createServerComponentClient<Database>({ cookies });
-}
-
-// lib/supabase/client.ts
-"use client";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import type { Database } from "@/types/supabase";
-import { getEnv } from "@/lib/env";
-
-export function getSupabaseClient() {
-  getEnv(); // validates NEXT_PUBLIC_* at runtime
-  return createClientComponentClient<Database>();
-}
-
-
-(If you don’t have types/supabase.ts, remove the <Database> generics.)
-
-3) Force dynamic rendering on auth-gated pages
-
-Edit both app/pets/page.tsx and app/pets/[id]/page.tsx:
-
-At the top of each file add:
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-
-Replace direct imports of createServerComponentClient with the helper:
-
-import { getSupabaseServer } from "@/lib/supabase/server";
-import { redirect, notFound } from "next/navigation";
-
-export default async function PetsPage() {
-  const supabase = getSupabaseServer();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in");
-
-  const { data: petsData, error } = await supabase
-    .from("pets")
-    .select("id,name,photo_url,created_at,species,breed")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("[/pets] Supabase error:", error);
-    throw error; // will show in Vercel logs with stack
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        priceId,
+        mode,
+        metadata: { duration: durationMinutes?.toString() },
+      }),
+    });
+    const data = await res.json();
+    setLoading(false);
+    if (data.url) window.location.href = data.url;
+    else alert(data.error ?? 'Could not start checkout');
   }
 
-  const pets = petsData ?? [];
-  // …render as before
-}
-
-
-Do the same pattern in app/pets/[id]/page.tsx (guard pet, coalesce arrays, log errors).
-
-4) Add an error boundary for nicer messages (optional but helpful)
-
-Create app/pets/error.tsx:
-
-"use client";
-
-export default function Error({ error, reset }: { error: Error; reset: () => void }) {
-  console.error("[/pets] Error boundary:", error);
   return (
-    <div className="mx-auto max-w-xl p-6">
-      <h1 className="text-2xl font-semibold">Something went wrong</h1>
-      <p className="mt-2 text-gray-600">Please try again in a moment.</p>
-      <button className="mt-4 rounded bg-blue-600 px-4 py-2 text-white" onClick={reset}>
-        Retry
-      </button>
+    <button
+      onClick={go}
+      disabled={loading}
+      className={`${className} ${loading ? 'opacity-70 pointer-events-none' : ''}`}
+    >
+      {loading ? 'Redirecting…' : label}
+    </button>
+  );
+}
+
+// components/SubscriptionPicker.tsx
+'use client';
+import { useMemo, useState } from 'react';
+import CheckoutButton from './CheckoutButton';
+
+export default function SubscriptionPicker({
+  variant, // '30' | '45'
+  priceMap,
+  linkMap,
+}: {
+  variant: '30' | '45';
+  priceMap: Record<'2' | '3' | '5', string | undefined>;  // Stripe price IDs
+  linkMap?: Record<'2' | '3' | '5', string | undefined>;   // Payment Link URLs (optional)
+}) {
+  const [freq, setFreq] = useState<'2' | '3' | '5'>('2');
+
+  const priceId = useMemo(() => priceMap[freq], [priceMap, freq]);
+  const paymentLink = useMemo(() => linkMap?.[freq], [linkMap, freq]);
+
+  return (
+    <div className="mt-4 flex items-center gap-3">
+      <select
+        value={freq}
+        onChange={(e) => setFreq(e.target.value as '2' | '3' | '5')}
+        className="rounded border px-3 py-2"
+        aria-label={`${variant}-minute subscription frequency`}
+      >
+        <option value="2">2 walks/week</option>
+        <option value="3">3 walks/week</option>
+        <option value="5">5 walks/week</option>
+      </select>
+
+      <CheckoutButton
+        label="Subscribe"
+        priceId={priceId}
+        paymentLink={paymentLink}
+        mode="subscription"
+        durationMinutes={variant === '30' ? 30 : 45}
+        className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+      />
     </div>
   );
 }
 
-5) Quick health check route (debug only; you can remove later)
+3) Wire it on the Walk Plans page – app/walk-plans/page.tsx
 
-Create app/api/health/route.ts:
+Add your actual Stripe Price IDs (or Payment Link URLs) in the constants below.
 
-import { NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabase/server";
+import CheckoutButton from '@/components/CheckoutButton';
+import SubscriptionPicker from '@/components/SubscriptionPicker';
 
-export async function GET() {
-  try {
-    const supabase = getSupabaseServer();
-    const { data: pets, error } = await supabase.from("pets").select("id").limit(1);
-    return NextResponse.json({ ok: !error, error: error?.message ?? null, petsRowsSeen: pets?.length ?? 0 });
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: String(e?.message ?? e) }, { status: 500 });
-  }
+const PRICES = {
+  // One-time prices (Stripe)
+  ONE_30: 'price_30_onetime_REPLACE',
+  ONE_45: 'price_45_onetime_REPLACE',
+  // Subscriptions (Stripe)
+  SUB_30: { '2': 'price_30_wk2_REPLACE', '3': 'price_30_wk3_REPLACE', '5': 'price_30_wk5_REPLACE' },
+  SUB_45: { '2': 'price_45_wk2_REPLACE', '3': 'price_45_wk3_REPLACE', '5': 'price_45_wk5_REPLACE' },
+} as const;
+
+// Optional: Payment Link fallback URLs (if using Payment Links)
+const LINKS = {
+  ONE_30: 'https://buy.stripe.com/your_link_30',
+  ONE_45: 'https://buy.stripe.com/your_link_45',
+  SUB_30: { '2': 'https://buy.stripe.com/your_link_s30_2', '3': 'https://buy.stripe.com/your_link_s30_3', '5': 'https://buy.stripe.com/your_link_s30_5' },
+  SUB_45: { '2': 'https://buy.stripe.com/your_link_s45_2', '3': 'https://buy.stripe.com/your_link_s45_3', '5': 'https://buy.stripe.com/your_link_s45_5' },
+} as const;
+
+export default function WalkPlansPage() {
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      {/* ... your existing layout/content ... */}
+
+      {/* 30-minute card button(s) */}
+      <CheckoutButton
+        label="Book This Plan"
+        priceId={PRICES.ONE_30}
+        paymentLink={LINKS.ONE_30}
+        mode="payment"
+        durationMinutes={30}
+        className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+      />
+      <SubscriptionPicker
+        variant="30"
+        priceMap={PRICES.SUB_30}
+        linkMap={LINKS.SUB_30}
+      />
+
+      {/* 45-minute card button(s) */}
+      <CheckoutButton
+        label="Book This Plan"
+        priceId={PRICES.ONE_45}
+        paymentLink={LINKS.ONE_45}
+        mode="payment"
+        durationMinutes={45}
+        className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+      />
+      <SubscriptionPicker
+        variant="45"
+        priceMap={PRICES.SUB_45}
+        linkMap={LINKS.SUB_45}
+      />
+    </div>
+  );
 }
 
-Vercel configuration (manual steps)
+4) Optional success helper
 
-Set env vars (Production, Preview, Development):
+Create app/schedule/page.tsx to read ?paid=1&duration=30 and preselect the walk duration (you likely already have this page).
 
-NEXT_PUBLIC_SUPABASE_URL = https://<your-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY = <anon key>
+Acceptance
 
+“Book This Plan” buttons redirect to Stripe (one-time).
 
-(From Supabase → Project Settings → API)
+A dropdown below each card selects 2/3/5 walks/week and the Subscribe button goes to Stripe.
 
-Redeploy after saving env vars.
+Works in Checkout mode when STRIPE_SECRET_KEY is present, otherwise uses Payment Links when USE_PAYMENT_LINKS=true.
 
-Check function logs if it still errors: Vercel → Deployments → select latest → “Functions” tab.
-You should see our clear messages (e.g., [ENV MISSING] or [/pets] Supabase error: …).
+Success returns users to /schedule?paid=1&duration=<30|45>.
 
-Acceptance criteria
+Commit message
 
-/pets and /pets/[id] load on Vercel when logged in (no generic “Application error” page).
-
-If env vars are missing, deploy logs show [ENV MISSING] … pointing to which key.
-
-/api/health returns { ok: true } (or a readable JSON error) instead of a 500.
-
-Local dev still works.
+feat(payments): Stripe checkout + subscription picker for Walk Plans, Payment Links fallback

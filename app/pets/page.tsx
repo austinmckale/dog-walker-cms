@@ -1,6 +1,6 @@
 import Navigation from '@/components/Navigation'
 import PetCard from '@/components/pets/PetCard'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { getSupabaseServer } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AddPetModal from '@/components/pets/AddPetModal'
 
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function PetsPage() {
-  const supabase = createSupabaseServer()
+  const supabase = getSupabaseServer()
   const {
     data: { user },
   } = await supabase.auth.getUser()
