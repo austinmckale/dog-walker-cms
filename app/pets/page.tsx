@@ -36,7 +36,6 @@ export default async function PetsPage() {
 
   if (petsError) {
     console.error('[/pets] Supabase error:', petsError)
-    throw petsError
   }
 
   const pets: Pet[] = petsData ?? []
