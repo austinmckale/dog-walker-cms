@@ -5,6 +5,7 @@ const nextConfig = {
     return [
       { source: '/reports', destination: '/pets', permanent: false },
       { source: '/dogs', destination: '/pets', permanent: false },
+      { source: '/sign-in', destination: '/signin', permanent: false },
     ]
   },
   images: {
