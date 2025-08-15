@@ -24,6 +24,7 @@
 
 # Next.js build output
 .next
+out
 
 # Typescript
 *.tsbuildinfo
