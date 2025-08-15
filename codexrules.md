@@ -1,130 +1,77 @@
-Prompt for Codex/Cursor
+Patch app/pets/page.tsx
 
-You’re in a Next.js 14 (App Router) + Supabase repo. Apply the following changes.
+Replace any pattern like:
 
-A) Fix EBADENGINE from @sanity/ui@3.0.6
-
-Preferred fix: move the project to Node 22 (matches @sanity/ui@3.x engine).
-
-Edit package.json:
-
-If an engines field exists, replace it. Otherwise add it.
-
-{
-  "engines": { "node": "22.x" }
-}
+const { data: pets } = await supabase
+  .from('pets')
+  .select('*')
+  .order('created_at', { ascending: false });
 
 
-Add/update .nvmrc (optional, for local dev):
+with a null-safe, typed version:
 
-22
-
-
-Ensure Vercel → Project → Settings → Node.js Version is 22.x (this is a manual step; add a README note).
-
-Keep the Install Command as:
-
-npm ci --legacy-peer-deps
-
-
-(Make sure you are not omitting dev deps.)
-
-Fallback (only if you must stay on Node 20):
-
-Downgrade to a Node-20-compatible Sanity UI:
-
-npm i @sanity/ui@^2 -S
-
-
-Add .npmrc to avoid strict engine failures:
-
-engine-strict=false
-
-
-Update any imports if v3-only APIs were used (v2 is mostly compatible for standard components).
-
-Also confirm .gitignore includes:
-
-.next
-
-B) Fix TypeScript: “reports is possibly 'null'”
-
-In app/pets/[id]/page.tsx, make the Supabase result a guaranteed array before rendering.
-
-Patch the file:
-
-// add a helpful type (optional)
-type VisitReport = {
+type Pet = {
   id: string;
-  happened_at: string;
-  duration_minutes: number | null;
-  distance_m: number | null;
-  potty1: boolean | null;
-  potty2: boolean | null;
+  owner_id: string;
+  name: string;
+  species: string | null;
+  breed: string | null;
+  sex: string | null;
+  weight_kg: number | null;
+  dob: string | null;
   notes: string | null;
   photo_url: string | null;
+  created_at: string;
 };
 
-// after you’ve fetched `pet`, fetch reports like this:
-const { data: reportsData, error: reportsError } = await supabase
-  .from('visit_reports')
+const { data: petsData, error: petsError } = await supabase
+  .from('pets')
   .select(
-    'id,happened_at,duration_minutes,distance_m,potty1,potty2,notes,photo_url'
+    'id,owner_id,name,species,breed,sex,weight_kg,dob,notes,photo_url,created_at'
   )
-  .eq('pet_id', pet.id)
-  .order('happened_at', { ascending: false })
-  .returns<VisitReport[]>();
+  .order('created_at', { ascending: false })
+  .returns<Pet[]>();
 
-// ALWAYS use a real array:
-const reports: VisitReport[] = reportsData ?? [];
+const pets: Pet[] = petsData ?? []; // ← ALWAYS an array
 
 
-Update the JSX render guard:
+Update the JSX guards to use the guaranteed array:
 
-<section className="space-y-4">
-  <h2 className="text-2xl font-semibold">Reports</h2>
-  {reports.length === 0 ? (
-    <p className="text-gray-600">No reports yet.</p>
-  ) : (
-    <ul className="space-y-3">
-      {reports.map(r => (
-        <li key={r.id} className="rounded border p-3">
-          <div className="text-sm">{new Date(r.happened_at).toLocaleString()}</div>
-          <div className="text-sm">
-            {(r.duration_minutes ?? 0)} min · {((r.distance_m ?? 0) / 1000).toFixed(2)} km
-          </div>
-          {r.photo_url && <img src={r.photo_url} alt="Report photo" className="mt-2 rounded" />}
-          {r.notes && <p className="mt-1">{r.notes}</p>}
-        </li>
-      ))}
-    </ul>
-  )}
-</section>
+{pets.length === 0 ? (
+  <div className="card max-w-xl mx-auto text-center">
+    <p className="text-gray-700">No pets yet.</p>
+  </div>
+) : (
+  <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {pets.map((p) => (
+      <li key={p.id}>{/* render PetCard here */}</li>
+    ))}
+  </ul>
+)}
 
 
-(Optional) Guard for missing pet:
+If you previously used optional chaining in JSX, you can keep it, but the petsData ?? [] coalesce is required so pets.length type-checks.
 
-import { notFound } from 'next/navigation';
-if (!pet) notFound();
+(Consistency) Audit this file for any other nullable arrays
 
-C) README note (add a short section)
+If there are other Supabase data results used directly in .length or .map, coalesce them the same way:
 
-Append to README.md:
+const rows = data ?? [];
 
-## Deploy / Runtime
-- Node: 22.x (package.json "engines" and Vercel setting)
-- Install Command: `npm ci --legacy-peer-deps`
-- Do not commit `.next/`
 
-## Sanity note
-@sanity/ui@3 requires Node 22+. If we must stay on Node 20, pin @sanity/ui@^2 and add `.npmrc` with `engine-strict=false`.
+Do NOT use typescript.ignoreBuildErrors
 
-D) Acceptance criteria
+We want a real fix, not a bypass.
 
-Vercel build installs without EBADENGINE failure (on Node 22) or, if staying on Node 20, no install failure and app runs with @sanity/ui@^2.
+Acceptance
 
-Next.js build no longer fails on reports.length (null-safe rendering).
+npm run build succeeds without the “possibly 'null'” error.
 
-The site deploys successfully.
+/pets renders correctly when there are 0 or more pets.
 
-Make these edits, run npm run build locally, then push changes.
+After patching, run:
+
+npm run build
+
+
+If the error moves to another variable, apply the same data ?? [] pattern there as well.

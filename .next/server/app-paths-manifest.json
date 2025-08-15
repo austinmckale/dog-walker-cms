@@ -1,3 +1,8 @@
 {
-  "/pets/page": "app/pets/page.js"
+  "/walk-plans/page": "app/walk-plans/page.js",
+  "/api/auth/session/route": "app/api/auth/session/route.js",
+  "/(auth)/signin/page": "app/(auth)/signin/page.js",
+  "/page": "app/page.js",
+  "/pets/page": "app/pets/page.js",
+  "/auth/callback/page": "app/auth/callback/page.js"
 }
