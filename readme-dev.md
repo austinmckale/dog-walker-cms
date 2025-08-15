@@ -1,86 +1,57 @@
-# Goal
-Fix Next.js build error:
-"useSearchParams() should be wrapped in a suspense boundary at page '/auth/callback'"
-and the subsequent prerender/export failure for /auth/callback.
+# Development Fix Plan (Vercel build + auth callback)
 
-# What to change
-1) Refactor the App Router page at app/auth/callback/page.(ts|tsx):
-   - Do not call `useSearchParams` directly in this file.
-   - Mark this route as dynamic so it isn't statically prerendered.
-   - Wrap the client part in <Suspense>.
+This project is Next.js 14 on Vercel. We addressed two issues:
+- Vercel builds failed because devDependencies (TypeScript) were not installed.
+- The `/auth/callback` page used `useSearchParams()` without a Suspense boundary, causing a build/runtime warning and prerender error.
 
-   === New file: app/auth/callback/CallbackClient.tsx ===
-   'use client';
-   import { useSearchParams, useRouter } from 'next/navigation';
-   import { useEffect } from 'react';
+What is already fixed in the repo:
+- `vercel.json` now uses `"installCommand": "npm ci"` (no `--omit=dev`). `.npmrc` has `legacy-peer-deps=true`, so no extra UI change is required in Vercel.
+- `package.json` engines target Node LTS range: `">=18.18.0 <21"`. The project `.nvmrc` pins Node `20`, which Vercel will respect when configured.
+- `/auth/callback` is refactored to the Suspense pattern and marked dynamic.
 
-   export default function CallbackClient() {
-     const params = useSearchParams();
-     const router = useRouter();
+Auth callback structure (current code):
+```
+// app/auth/callback/page.tsx
+import { Suspense } from 'react'
+import CallbackClient from './CallbackClient'
 
-     // Read typical OAuth params
-     const code = params.get('code');
-     const error = params.get('error');
-     const state = params.get('state');
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-     // Example side-effect: forward to our API route or Supabase handler
-     useEffect(() => {
-       // TODO: replace with real handler if needed
-       // If you already have a callback handler, call it here.
-       // After handling, redirect the user where appropriate.
-       // router.replace('/dashboard');
-     }, [code, error, state, router]);
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Loading…</p>}>
+      <CallbackClient />
+    </Suspense>
+  )
+}
+```
 
-     return <p>Signing you in…</p>;
-   }
+```
+// app/auth/callback/CallbackClient.tsx
+'use client'
+import { useEffect, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase/client'
 
-   === Replace contents of: app/auth/callback/page.tsx ===
-   import { Suspense } from 'react';
-   import CallbackClient from './CallbackClient';
+export default function CallbackClient() {
+  const params = useSearchParams()
+  const router = useRouter()
+  const [message, setMessage] = useState('Completing sign-in…')
+  // exchanges code, sets cookies via /api/auth/session, then redirects
+}
+```
 
-   // Do not prerender; OAuth callbacks are dynamic by nature
-   export const dynamic = 'force-dynamic';   // prevents static generation
-   export const revalidate = 0;              // ensure no caching during build
+Recommended verifications (local):
+- Use Node 20: `nvm use 20`
+- Install and build: `npm ci && npm run build`
 
-   export default function Page() {
-     return (
-       <Suspense fallback={<p>Loading…</p>}>
-         <CallbackClient />
-       </Suspense>
-     );
-   }
+Notes and guardrails:
+- Keep TypeScript and type packages installed (they are already present). Consider moving `@types/*` to `devDependencies` in a future cleanup.
+- `.gitignore` already includes `.next`.
+- Do not set `output: 'export'` in `next.config.js` for this project.
 
-2) Ensure any other routes that use `useSearchParams` in App Router are wrapped similarly:
-   - If a *page* needs `useSearchParams`, create a sibling Client Component (*.Client.tsx),
-     use the hook there, and wrap it with <Suspense> in the page.
-   - Or keep the hook in a Client Component inside the page.
-
-3) Prevent static export from breaking dynamic routes:
-   - Open next.config.js.
-   - If `output: 'export'` is set, REMOVE it so Vercel can run a dynamic build.
-   - The file should export a normal config, e.g.:
-     /** @type {import('next').NextConfig} */
-     const nextConfig = {
-       reactStrictMode: true,
-       // DO NOT set output: 'export' for this project.
-     };
-     module.exports = nextConfig;
-
-4) Keep Node/engines tidy (optional):
-   - package.json:
-     {
-       "engines": { "node": "20.x" },
-       "engineStrict": false
-     }
-
-5) Run type check and build locally to confirm:
-   - npm ci
-   - npm run build
-
-6) Commit and push changes to main with message:
-   "fix(auth): wrap useSearchParams in Suspense and make /auth/callback dynamic"
-
-# Acceptance criteria
-- `npm run build` completes with no "missing suspense" or "prerender error" for /auth/callback.
-- Vercel deployment turns green.
-- Visiting /auth/callback during an OAuth flow renders (shows "Signing you in…" or your final redirect).
+Acceptance criteria:
+- `npm run build` succeeds locally and on Vercel (no missing TypeScript).
+- No Suspense/prerender error for `/auth/callback`.
+- Vercel uses Node 20.x per project settings; no Node 22 warning.
