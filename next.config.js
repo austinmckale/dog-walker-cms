@@ -3,7 +3,8 @@ const path = require('path')
 const nextConfig = {
   async redirects() {
     return [
-      { source: '/reports', destination: '/dogs', permanent: false },
+      { source: '/reports', destination: '/pets', permanent: false },
+      { source: '/dogs', destination: '/pets', permanent: false },
     ]
   },
   images: {

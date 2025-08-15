@@ -85,9 +85,9 @@ function NavItems({ pathname }: { pathname: string }) {
         <span>Schedule</span>
       </LinkItem>
       {isAuthed && (
-        <LinkItem href="/dogs">
+        <LinkItem href="/pets">
           <Users className="h-4 w-4" />
-          <span>Dogs</span>
+          <span>Pets</span>
         </LinkItem>
       )}
       {!isAuthed ? (

@@ -20,7 +20,7 @@ export default function MobileNav() {
   const items = [
     {name: 'Home', href: '/', icon: Home, show: true},
     {name: 'Schedule', href: '/schedule', icon: Calendar, show: true},
-    {name: 'Clients', href: '/dogs', icon: Users, show: isAuthed},
+    {name: 'Pets', href: '/pets', icon: Users, show: isAuthed},
     {name: 'Sign In', href: '/signin', icon: User, show: !isAuthed},
   ] as const
 
