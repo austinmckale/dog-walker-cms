@@ -2,7 +2,17 @@ import Navigation from '@/components/Navigation'
 import NewReport from '@/components/reports/NewReport'
 import Image from 'next/image'
 import { createSupabaseServer } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+type VisitReport = {
+  id: string
+  happened_at: string
+  duration_minutes: number | null
+  distance_m: number | null
+  potty1: boolean | null
+  potty2: boolean | null
+  notes: string | null
+  photo_url: string | null
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -19,14 +29,15 @@ export default async function PetDetailPage({ params }: { params: { id: string }
     .select('id,name,species,breed,notes,photo_url,created_at')
     .eq('id', petId)
     .single()
-  if (petErr || !pet) redirect('/pets')
+  if (petErr || !pet) notFound()
 
-  const { data: reports = [] } = await supabase
+  const { data: reportsData, error: reportsError } = await supabase
     .from('visit_reports')
     .select('id,happened_at,duration_minutes,distance_m,potty1,potty2,notes,photo_url')
-    .eq('pet_id', petId)
+    .eq('pet_id', pet.id)
     .order('happened_at', { ascending: false })
-    .limit(10)
+    .returns<VisitReport[]>()
+  const reports: VisitReport[] = reportsData ?? []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,16 +69,19 @@ export default async function PetDetailPage({ params }: { params: { id: string }
             <p className="text-gray-600">No reports yet.</p>
           ) : (
             <ul className="space-y-3">
-              {reports.map((r: any) => (
+              {reports.map((r) => (
                 <li key={r.id} className="bg-white rounded-md p-4 border">
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-600">
                       {r.happened_at ? new Date(r.happened_at).toLocaleString() : '—'}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {r.duration_minutes ? `${r.duration_minutes} min` : ''}
-                      {r.distance_m ? ` · ${r.distance_m} m` : ''}
-                      {(r.potty1 || r.potty2) ? ` · ${[r.potty1 && 'P1', r.potty2 && 'P2'].filter(Boolean).join('/')}` : ''}
+                      {(r.duration_minutes ?? 0)} min · {((r.distance_m ?? 0) / 1000).toFixed(2)} km
+                      {(r.potty1 || r.potty2)
+                        ? ` · ${[r.potty1 && 'P1', r.potty2 && 'P2']
+                            .filter(Boolean)
+                            .join('/')}`
+                        : ''}
                     </div>
                   </div>
                   {r.notes && <p className="mt-2 text-gray-700">{r.notes}</p>}
@@ -85,4 +99,3 @@ export default async function PetDetailPage({ params }: { params: { id: string }
     </div>
   )
 }
-

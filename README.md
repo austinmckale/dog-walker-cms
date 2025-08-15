@@ -161,10 +161,18 @@ The website is fully responsive and works on:
 3. Deploy automatically on push to main branch
 
 ### Deploy Notes
-- Install command is managed via `vercel.json` and includes devDependencies: `npm ci`.
-- Node version: use Node 20 (see `.nvmrc`); `package.json` engines restrict to Node <21.
+- Install command is managed via `vercel.json`: `npm ci --legacy-peer-deps`.
+- Node version: use Node 22.x (see `.nvmrc`); `package.json` engines pin Node 22.x.
 - Do not set `output: 'export'` in `next.config.js` (dynamic routes present).
 - OAuth callback at `/auth/callback` uses a client component within `Suspense` and is marked dynamic.
+
+## Deploy / Runtime
+- Node: 22.x (package.json "engines" and Vercel setting)
+- Install Command: `npm ci --legacy-peer-deps`
+- Do not commit `.next/`
+
+## Sanity note
+`@sanity/ui@3` requires Node 22+. If you must stay on Node 20, pin `@sanity/ui@^2` and add `.npmrc` with `engine-strict=false`.
 
 ### Other Platforms
 The Next.js app can be deployed to any platform that supports Node.js:
