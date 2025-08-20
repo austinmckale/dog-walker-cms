@@ -57,11 +57,20 @@ function TimeDropdown({
     </div>
   )
 }
+function tomorrowISO() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export default function SchedulePage() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [service, setService] = useState<Service>('30-min Walk')
   const [duration, setDuration] = useState(30)
-  const [date, setDate] = useState('')
+  const [date, setDate] = useState(tomorrowISO())
   const [time, setTime] = useState('')
   const [form, setForm] = useState({ name: '', email: '', phone: '', dog: '', notes: '' })
   const timeOptions = (() => {

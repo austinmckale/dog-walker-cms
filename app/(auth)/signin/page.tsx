@@ -6,7 +6,7 @@ import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
 
-type LoadingKey = "email"|"password"|"signup"|"google"|"github"|null
+type LoadingKey = "email"|"password"|"signup"|"google"|"facebook"|null
 
 const signInSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -89,7 +89,7 @@ export default function AuthPage() {
     }
   }, [authCallback]);
 
-  const onOAuth = useCallback(async (provider: 'google'|'github') => {
+  const onOAuth = useCallback(async (provider: 'google'|'facebook') => {
     setLoading(provider);
     const redirectTo = authCallback ? authCallback + (remember ? "?remember=1" : "") : undefined;
     const {error} = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
@@ -158,8 +158,8 @@ export default function AuthPage() {
               <button onClick={() => onOAuth('google')} disabled={loading==='google'} className="w-full btn-primary flex items-center justify-center gap-2" aria-label="Sign in with Google">
                 {loading==='google' ? 'Redirecting…' : 'Continue with Google'}
               </button>
-              <button onClick={() => onOAuth('github')} disabled={loading==='github'} className="w-full btn-secondary flex items-center justify-center gap-2" aria-label="Sign in with GitHub">
-                {loading==='github' ? 'Redirecting…' : 'Continue with GitHub'}
+              <button onClick={() => onOAuth('facebook')} disabled={loading==='facebook'} className="w-full btn-secondary flex items-center justify-center gap-2" aria-label="Sign in with Facebook">
+                {loading==='facebook' ? 'Redirecting…' : 'Continue with Facebook'}
               </button>
             </div>
 
