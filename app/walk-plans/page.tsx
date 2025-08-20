@@ -1,34 +1,7 @@
 import { WalkPlan } from '@/types'
 import WalkPlanCard from '@/components/WalkPlanCard'
 
-// By default, leave Stripe price IDs undefined so the UI uses Payment Links fallback out of the box.
-const PRICES: {
-  ONE_30?: string
-  ONE_45?: string
-  SUB_30: Record<'2' | '3' | '5', string | undefined>
-  SUB_45: Record<'2' | '3' | '5', string | undefined>
-} = {
-  // One-time prices (Stripe) — fill with your real price IDs to enable Checkout Sessions
-  ONE_30: undefined,
-  ONE_45: undefined,
-  // Subscriptions (Stripe)
-  SUB_30: { '2': undefined, '3': undefined, '5': undefined },
-  SUB_45: { '2': undefined, '3': undefined, '5': undefined },
-}
-
-// Optional: Payment Link fallback URLs (if using Payment Links)
-const LINKS: {
-  ONE_30?: string
-  ONE_45?: string
-  SUB_30: Record<'2' | '3' | '5', string | undefined>
-  SUB_45: Record<'2' | '3' | '5', string | undefined>
-} = {
-  ONE_30: 'https://buy.stripe.com/your_link_30',
-  ONE_45: 'https://buy.stripe.com/your_link_45',
-  SUB_30: { '2': 'https://buy.stripe.com/your_link_s30_2', '3': 'https://buy.stripe.com/your_link_s30_3', '5': 'https://buy.stripe.com/your_link_s30_5' },
-  SUB_45: { '2': 'https://buy.stripe.com/your_link_s45_2', '3': 'https://buy.stripe.com/your_link_s45_3', '5': 'https://buy.stripe.com/your_link_s45_5' },
-}
-import Navigation from '@/components/Navigation'
+// Pricing tables remain visible; CTAs route to meet & greet first.
 
 // Actual walk offerings
 const walkPlans: WalkPlan[] = [
@@ -60,8 +33,6 @@ const walkPlans: WalkPlan[] = [
 export default function WalkPlansPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -80,14 +51,7 @@ export default function WalkPlansPage() {
           {walkPlans.map((walkPlan) => {
             const is30 = walkPlan.duration === 30
             return (
-              <WalkPlanCard
-                key={walkPlan._id}
-                walkPlan={walkPlan}
-                oneTimePriceId={is30 ? PRICES.ONE_30 : PRICES.ONE_45}
-                oneTimePaymentLink={is30 ? LINKS.ONE_30 : LINKS.ONE_45}
-                subPriceMap={is30 ? PRICES.SUB_30 : PRICES.SUB_45}
-                subLinkMap={is30 ? LINKS.SUB_30 : LINKS.SUB_45}
-              />
+              <WalkPlanCard key={walkPlan._id} walkPlan={walkPlan} />
             )
           })}
           </div>
@@ -138,6 +102,7 @@ export default function WalkPlansPage() {
               </tbody>
             </table>
           </div>
+          <p className="text-sm text-gray-600 mt-3 text-center">Subscriptions are available after your meet &amp; greet. Prices shown reflect per-walk equivalent.</p>
         </section>
 
         {/* Subscription Packages – 45-Minute Walks */}
@@ -185,6 +150,7 @@ export default function WalkPlansPage() {
               </tbody>
             </table>
           </div>
+          <p className="text-sm text-gray-600 mt-3 text-center">Subscriptions are available after your meet &amp; greet. Prices shown reflect per-walk equivalent.</p>
         </section>
 
         {/* Call to Action */}

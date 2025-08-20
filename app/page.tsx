@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import Navigation from '@/components/Navigation'
 import { PawPrint, MapPin, Clock, Shield, Users, FileText } from 'lucide-react'
+import { getSupabaseServer } from '@/lib/supabase/server'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = getSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
       
       {/* WAVE-CUT HERO */}
       <section className="relative isolate min-h-[68vh] sm:min-h-[76vh] overflow-hidden">
@@ -35,6 +36,12 @@ export default function HomePage() {
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
+                href="/meet-greet"
+                className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium shadow hover:bg-blue-700"
+              >
+                Book Free Meet & Greet
+              </Link>
+              <Link
                 href="/walk-plans"
                 className="rounded-lg bg-white/95 text-gray-900 px-5 py-2.5 font-medium shadow hover:bg-white"
               >
@@ -46,12 +53,14 @@ export default function HomePage() {
               >
                 Book Transport
               </Link>
-              <Link
-                href="/schedule?service=walk"
-                className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium shadow hover:bg-blue-700"
-              >
-                Request a Walk
-              </Link>
+              {user && (
+                <Link
+                  href="/schedule?service=walk"
+                  className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium shadow hover:bg-blue-700"
+                >
+                  Request a Walk
+                </Link>
+              )}
             </div>
           </div>
         </div>

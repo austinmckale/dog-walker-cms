@@ -1,4 +1,3 @@
-import Navigation from '@/components/Navigation'
 import { createSupabaseServer } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -14,7 +13,6 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
       <main className="max-w-3xl mx-auto px-4 py-12">
         <div className="card">
           <h1 className="text-2xl font-semibold mb-4">Profile</h1>

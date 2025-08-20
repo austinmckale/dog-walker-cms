@@ -1,264 +1,295 @@
-Codex/Cursor Prompt — Add Stripe payments + subscription picker to Walk Plans
+Codex Prompt
 
-We’re in a Next.js 14 (App Router) repo. Implement payments for the two walk plans with Stripe and add a subscription dropdown (2/3/5 walks per week) under each plan.
+You are a senior Next.js + Tailwind engineer. Update an existing Next.js App Router project for “Pawsome Walks”. The site currently has: Home, Walk Plans (pricing), Schedule, Sign In. It looks OK on desktop but is clunky on mobile. The business requires a meet & greet before any booking/subscription.
 
-Requirements
+Goals
 
-Support two modes:
+Fix mobile navigation button (hamburger) so it opens a menu reliably on small screens.
 
-Payment Links (zero-code fallback): if we set USE_PAYMENT_LINKS=true or no Stripe secret is present, buttons should go straight to the provided Payment Link URLs.
+Replace e-commerce style CTAs with an industry-standard Meet & Greet first flow.
 
-Stripe Checkout Sessions (preferred): create a Checkout Session via API and redirect.
+Make scheduling mobile-first: convert the long form into a short stepper (Service → Date/Time → Owner/Dog → Confirm).
 
-One-time buttons: “Book This Plan” ($30 for 30-min, $40 for 45-min).
+Keep Supabase auth intact; do not add new tables. Contact actions can send an email via mailto: and/or post to an existing webhook endpoint if present.
 
-Subscription dropdown (2/3/5 walks per week) + “Subscribe” button for each plan.
+Implementation
+A) Responsive Navigation (bug fix)
 
-After successful checkout, redirect to /schedule?paid=1&service=walk&duration=<30|45>.
+Create components/Navbar.tsx and use a simple, accessible pattern (no external libs). Ensure the toggle is clickable on mobile (no overlay blocking clicks, correct z-index). Add a focus trap and ESC to close.
 
-Keep the current page layout/styles; only add button wiring + dropdown UI.
+// components/Navbar.tsx
+"use client";
+import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
 
-0) Install & env
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-Add dep:
+  // Close on ESC
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-npm i stripe
-
-
-Env (local .env.local and Vercel):
-
-STRIPE_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_SUCCESS_URL=https://<your-domain>/schedule?paid=1
-NEXT_PUBLIC_CANCEL_URL=https://<your-domain>/walk-plans
-USE_PAYMENT_LINKS=false
-
-1) API route – app/api/checkout/route.ts
-
-Create a Checkout Session for one-time or subscription:
-
-import Stripe from 'stripe';
-import { NextResponse } from 'next/server';
-
-const canUseStripe = !!process.env.STRIPE_SECRET_KEY && process.env.USE_PAYMENT_LINKS !== 'true';
-
-const stripe = canUseStripe
-  ? new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
-  : null;
-
-export async function POST(req: Request) {
-  try {
-    if (!stripe) {
-      return NextResponse.json({ error: 'Stripe disabled (using Payment Links).' }, { status: 400 });
-    }
-    const { priceId, mode = 'payment', metadata } = await req.json();
-
-    if (!priceId) return NextResponse.json({ error: 'Missing priceId' }, { status: 400 });
-
-    const successBase = process.env.NEXT_PUBLIC_SUCCESS_URL ?? 'http://localhost:3000/schedule?paid=1';
-    const cancelUrl = process.env.NEXT_PUBLIC_CANCEL_URL ?? 'http://localhost:3000/walk-plans';
-
-    const duration = metadata?.duration ? `&duration=${metadata.duration}` : '';
-
-    const session = await stripe.checkout.sessions.create({
-      mode, // 'payment' | 'subscription'
-      line_items: [{ price: priceId, quantity: 1 }],
-      allow_promotion_codes: true,
-      automatic_tax: { enabled: false },
-      success_url: `${successBase}${duration}`,
-      cancel_url: cancelUrl,
-      metadata,
-    });
-
-    return NextResponse.json({ url: session.url });
-  } catch (e: any) {
-    console.error('Stripe checkout error:', e);
-    return NextResponse.json({ error: e.message ?? 'Checkout failed' }, { status: 500 });
-  }
-}
-
-2) Client helpers – components/CheckoutButton.tsx + components/SubscriptionPicker.tsx
-// components/CheckoutButton.tsx
-'use client';
-import { useState } from 'react';
-
-export default function CheckoutButton({
-  label,
-  priceId,
-  mode = 'payment',
-  durationMinutes,
-  paymentLink, // optional fallback URL
-  className = '',
-}: {
-  label: string;
-  priceId?: string;
-  mode?: 'payment' | 'subscription';
-  durationMinutes?: 30 | 45;
-  paymentLink?: string;
-  className?: string;
-}) {
-  const [loading, setLoading] = useState(false);
-  const useLinks = process.env.NEXT_PUBLIC_USE_PAYMENT_LINKS === 'true';
-
-  async function go() {
-    setLoading(true);
-
-    // Fallback: use Payment Link URL when configured
-    if (useLinks || !priceId) {
-      if (!paymentLink) {
-        alert('Payment link not configured.');
-        setLoading(false);
-        return;
-      }
-      window.location.href = paymentLink;
-      return;
-    }
-
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        priceId,
-        mode,
-        metadata: { duration: durationMinutes?.toString() },
-      }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (data.url) window.location.href = data.url;
-    else alert(data.error ?? 'Could not start checkout');
-  }
+  // Close if clicking outside panel
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!panelRef.current) return;
+      if (open && !panelRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [open]);
 
   return (
-    <button
-      onClick={go}
-      disabled={loading}
-      className={`${className} ${loading ? 'opacity-70 pointer-events-none' : ''}`}
-    >
-      {loading ? 'Redirecting…' : label}
-    </button>
+    <header className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur border-b">
+      <nav className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
+        <Link href="/" className="font-semibold">Pawsome Walks</Link>
+
+        {/* Desktop */}
+        <div className="hidden md:flex gap-6">
+          <Link href="/walk-plans">Walk Plans</Link>
+          <Link href="/schedule">Schedule</Link>
+          <Link href="/sign-in" className="rounded-md border px-3 py-1.5">Sign In</Link>
+        </div>
+
+        {/* Mobile toggle */}
+        <button
+          aria-label="Open menu"
+          aria-expanded={open}
+          onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }}
+          className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-md border"
+        >
+          <span className="sr-only">Menu</span>
+          <svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        </button>
+      </nav>
+
+      {/* Mobile menu */}
+      {open && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" />
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            className="fixed top-14 right-0 left-0 mx-4 rounded-xl border bg-white p-4 z-50 md:hidden"
+          >
+            <div className="flex flex-col gap-3">
+              <Link onClick={() => setOpen(false)} href="/walk-plans">Walk Plans</Link>
+              <Link onClick={() => setOpen(false)} href="/schedule">Schedule</Link>
+              <Link onClick={() => setOpen(false)} href="/meet-greet" className="rounded-md bg-blue-600 text-white px-3 py-2 text-center">Book Free Meet &amp; Greet</Link>
+              <Link onClick={() => setOpen(false)} href="/sign-in" className="rounded-md border px-3 py-2 text-center">Sign In</Link>
+            </div>
+          </div>
+        </>
+      )}
+    </header>
   );
 }
 
-// components/SubscriptionPicker.tsx
-'use client';
-import { useMemo, useState } from 'react';
-import CheckoutButton from './CheckoutButton';
 
-export default function SubscriptionPicker({
-  variant, // '30' | '45'
-  priceMap,
-  linkMap,
-}: {
-  variant: '30' | '45';
-  priceMap: Record<'2' | '3' | '5', string | undefined>;  // Stripe price IDs
-  linkMap?: Record<'2' | '3' | '5', string | undefined>;   // Payment Link URLs (optional)
-}) {
-  const [freq, setFreq] = useState<'2' | '3' | '5'>('2');
+Mount this in your root layout and add top padding so content isn’t hidden:
 
-  const priceId = useMemo(() => priceMap[freq], [priceMap, freq]);
-  const paymentLink = useMemo(() => linkMap?.[freq], [linkMap, freq]);
-
+// app/layout.tsx
+import Navbar from "@/components/Navbar";
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-4 flex items-center gap-3">
-      <select
-        value={freq}
-        onChange={(e) => setFreq(e.target.value as '2' | '3' | '5')}
-        className="rounded border px-3 py-2"
-        aria-label={`${variant}-minute subscription frequency`}
-      >
-        <option value="2">2 walks/week</option>
-        <option value="3">3 walks/week</option>
-        <option value="5">5 walks/week</option>
-      </select>
-
-      <CheckoutButton
-        label="Subscribe"
-        priceId={priceId}
-        paymentLink={paymentLink}
-        mode="subscription"
-        durationMinutes={variant === '30' ? 30 : 45}
-        className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      />
-    </div>
+    <html lang="en">
+      <body className="min-h-screen">
+        <Navbar />
+        <main className="pt-16">{children}</main>
+      </body>
+    </html>
   );
 }
 
-3) Wire it on the Walk Plans page – app/walk-plans/page.tsx
 
-Add your actual Stripe Price IDs (or Payment Link URLs) in the constants below.
+This fixes the “nav button doesn’t work on mobile” by providing a real button, stopping event propagation, ensuring a visible overlay with correct z-index, and avoiding hidden elements with pointer-events:none.
 
-import CheckoutButton from '@/components/CheckoutButton';
-import SubscriptionPicker from '@/components/SubscriptionPicker';
+B) Meet & Greet–First flow
 
-const PRICES = {
-  // One-time prices (Stripe)
-  ONE_30: 'price_30_onetime_REPLACE',
-  ONE_45: 'price_45_onetime_REPLACE',
-  // Subscriptions (Stripe)
-  SUB_30: { '2': 'price_30_wk2_REPLACE', '3': 'price_30_wk3_REPLACE', '5': 'price_30_wk5_REPLACE' },
-  SUB_45: { '2': 'price_45_wk2_REPLACE', '3': 'price_45_wk3_REPLACE', '5': 'price_45_wk5_REPLACE' },
-} as const;
+Create a new page at /meet-greet with a short form and clear copy.
 
-// Optional: Payment Link fallback URLs (if using Payment Links)
-const LINKS = {
-  ONE_30: 'https://buy.stripe.com/your_link_30',
-  ONE_45: 'https://buy.stripe.com/your_link_45',
-  SUB_30: { '2': 'https://buy.stripe.com/your_link_s30_2', '3': 'https://buy.stripe.com/your_link_s30_3', '5': 'https://buy.stripe.com/your_link_s30_5' },
-  SUB_45: { '2': 'https://buy.stripe.com/your_link_s45_2', '3': 'https://buy.stripe.com/your_link_s45_3', '5': 'https://buy.stripe.com/your_link_s45_5' },
-} as const;
+Replace “Book This Plan / Subscribe” on Walk Plans with “Start with a Free Meet & Greet”.
 
-export default function WalkPlansPage() {
+Add a note under each plan: “All new clients begin with a complimentary meet & greet before scheduling walks.”
+
+New page
+
+// app/meet-greet/page.tsx
+"use client";
+import { useState } from "react";
+
+export default function MeetGreetPage() {
+  const [state, setState] = useState({ name: "", email: "", phone: "", dog: "", notes: "" });
+
+  const mailto = `mailto:austinmck17@gmail.com?subject=Meet%20%26%20Greet%20Request&body=` +
+    encodeURIComponent(
+      `Name: ${state.name}\nEmail: ${state.email}\nPhone: ${state.phone}\nDog(s): ${state.dog}\nNotes: ${state.notes}`
+    );
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      {/* ... your existing layout/content ... */}
+    <section className="mx-auto max-w-xl px-4 py-8">
+      <h1 className="text-2xl font-bold mb-2">Book a Free Meet &amp; Greet</h1>
+      <p className="text-sm text-gray-600 mb-6">
+        We meet you and your pup first to learn routines and ensure a great fit. After approval, you’ll be able to schedule walks.
+      </p>
 
-      {/* 30-minute card button(s) */}
-      <CheckoutButton
-        label="Book This Plan"
-        priceId={PRICES.ONE_30}
-        paymentLink={LINKS.ONE_30}
-        mode="payment"
-        durationMinutes={30}
-        className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      />
-      <SubscriptionPicker
-        variant="30"
-        priceMap={PRICES.SUB_30}
-        linkMap={LINKS.SUB_30}
-      />
-
-      {/* 45-minute card button(s) */}
-      <CheckoutButton
-        label="Book This Plan"
-        priceId={PRICES.ONE_45}
-        paymentLink={LINKS.ONE_45}
-        mode="payment"
-        durationMinutes={45}
-        className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      />
-      <SubscriptionPicker
-        variant="45"
-        priceMap={PRICES.SUB_45}
-        linkMap={LINKS.SUB_45}
-      />
-    </div>
+      <form className="grid gap-4">
+        <input className="input" placeholder="Your name" value={state.name} onChange={e=>setState({...state, name:e.target.value})}/>
+        <input className="input" placeholder="Email" value={state.email} onChange={e=>setState({...state, email:e.target.value})}/>
+        <input className="input" placeholder="Phone" value={state.phone} onChange={e=>setState({...state, phone:e.target.value})}/>
+        <input className="input" placeholder="Dog name(s) & breed" value={state.dog} onChange={e=>setState({...state, dog:e.target.value})}/>
+        <textarea className="input min-h-[120px]" placeholder="Anything we should know?" value={state.notes} onChange={e=>setState({...state, notes:e.target.value})}/>
+        <div className="flex gap-3">
+          <a href={mailto} className="btn-primary">Email Request</a>
+          <a href="sms:+16105872374?&body=Hi%20—%20I%E2%80%99d%20like%20to%20book%20a%20meet%20%26%20greet." className="btn-outline">Text Us</a>
+        </div>
+      </form>
+    </section>
   );
 }
 
-4) Optional success helper
 
-Create app/schedule/page.tsx to read ?paid=1&duration=30 and preselect the walk duration (you likely already have this page).
+Add simple Tailwind component classes:
 
-Acceptance
+// styles (globals.css or as utilities)
+.input { @apply w-full rounded-md border px-3 py-2; }
+.btn-primary { @apply inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-white; }
+.btn-outline { @apply inline-flex items-center justify-center rounded-md border px-4 py-2; }
 
-“Book This Plan” buttons redirect to Stripe (one-time).
 
-A dropdown below each card selects 2/3/5 walks/week and the Subscribe button goes to Stripe.
+Update Walk Plans CTAs
 
-Works in Checkout mode when STRIPE_SECRET_KEY is present, otherwise uses Payment Links when USE_PAYMENT_LINKS=true.
+Replace “Book This Plan” buttons with: href="/meet-greet" and label “Start with Free Meet & Greet”.
 
-Success returns users to /schedule?paid=1&duration=<30|45>.
+Replace “Subscribe” dropdown/button with a single small text link: “Subscription available after meet & greet”.
 
-Commit message
+Under each plan card, add: “Includes GPS tracking & photo updates. New clients start with a meet & greet.”
 
-feat(payments): Stripe checkout + subscription picker for Walk Plans, Payment Links fallback
+C) Mobile Stepper for Schedule page
+
+Convert /schedule into a 3-step mobile-first form: Service → Date/Time → Owner & Dog → Confirm. Buttons are large, touch-friendly. Default durations auto-fill for walk types.
+
+// app/schedule/page.tsx
+"use client";
+import { useState } from "react";
+
+type Service = "30-min Walk" | "45-min Walk" | "Transport";
+export default function SchedulePage() {
+  const [step, setStep] = useState<1|2|3|4>(1);
+  const [service, setService] = useState<Service>("30-min Walk");
+  const [duration, setDuration] = useState(30);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [form, setForm] = useState({ name:"", email:"", phone:"", dog:"", notes:"" });
+
+  const next = ()=> setStep((s)=> (s<4 ? (s+1) as any : s));
+  const back = ()=> setStep((s)=> (s>1 ? (s-1) as any : s));
+
+  const onPick = (s: Service) => {
+    setService(s);
+    setDuration(s === "45-min Walk" ? 45 : s === "30-min Walk" ? 30 : 0);
+    next();
+  };
+
+  const mailto = `mailto:austinmck17@gmail.com?subject=Walk%20Request&body=` + encodeURIComponent(
+    `Service: ${service}\nDuration: ${duration} min\nDate: ${date}\nTime: ${time}\nName: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone}\nDog(s): ${form.dog}\nNotes: ${form.notes}`
+  );
+
+  return (
+    <section className="mx-auto max-w-xl px-4 py-8">
+      <h1 className="text-2xl font-bold mb-1">Request a Walk</h1>
+      <p className="text-sm text-gray-600 mb-6">New here? Please <a className="underline" href="/meet-greet">book a Meet &amp; Greet first</a>.</p>
+
+      {/* Step indicator */}
+      <div className="mb-4 text-sm text-gray-500">Step {step} of 4</div>
+
+      {step===1 && (
+        <div className="grid gap-3">
+          <button className="card" onClick={()=>onPick("30-min Walk")}>30-Minute Walk</button>
+          <button className="card" onClick={()=>onPick("45-min Walk")}>45-Minute Walk</button>
+          <button className="card" onClick={()=>onPick("Transport")}>Pet Transport</button>
+        </div>
+      )}
+
+      {step===2 && (
+        <div className="grid gap-3">
+          <input className="input" type="date" value={date} onChange={e=>setDate(e.target.value)} />
+          <input className="input" type="time" value={time} onChange={e=>setTime(e.target.value)} />
+          {duration>0 && (
+            <select className="input" value={duration} onChange={e=>setDuration(+e.target.value)}>
+              <option value={duration}>{duration} minutes</option>
+              <option value={duration===30?45:30}>{duration===30?45:30} minutes</option>
+            </select>
+          )}
+          <div className="flex gap-3">
+            <button className="btn-outline" onClick={back}>Back</button>
+            <button className="btn-primary" onClick={next}>Next</button>
+          </div>
+        </div>
+      )}
+
+      {step===3 && (
+        <div className="grid gap-3">
+          <input className="input" placeholder="Your name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
+          <input className="input" placeholder="Email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/>
+          <input className="input" placeholder="Phone" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/>
+          <input className="input" placeholder="Dog name(s)" value={form.dog} onChange={e=>setForm({...form,dog:e.target.value})}/>
+          <textarea className="input min-h-[100px]" placeholder="Notes" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})}/>
+          <div className="flex gap-3">
+            <button className="btn-outline" onClick={back}>Back</button>
+            <button className="btn-primary" onClick={next}>Review</button>
+          </div>
+        </div>
+      )}
+
+      {step===4 && (
+        <div className="space-y-4">
+          <div className="rounded-md border p-4 text-sm">
+            <div><b>Service:</b> {service} {duration ? `(${duration} min)` : ""}</div>
+            <div><b>Date/Time:</b> {date} {time}</div>
+            <div><b>Name:</b> {form.name}</div>
+            <div><b>Dog(s):</b> {form.dog}</div>
+            <div><b>Notes:</b> {form.notes || "—"}</div>
+          </div>
+          <div className="flex gap-3">
+            <button className="btn-outline" onClick={back}>Back</button>
+            <a href={mailto} className="btn-primary">Send Request</a>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+
+Add a small card utility:
+
+/* globals.css */
+.card { @apply w-full rounded-xl border px-4 py-4 text-left; }
+
+D) Update Walk Plans page UI text
+
+Card button label: “Start with Free Meet & Greet” → link to /meet-greet.
+
+Remove “Subscribe” buttons. Under the price tables add a muted note:
+
+“Subscriptions are available after your meet & greet. Prices shown reflect per-walk equivalent.”
+
+Acceptance Criteria
+
+On mobile, tapping the hamburger opens a menu every time; no dead zones; overlay dims background; ESC and outside click close it.
+
+All pricing CTAs route to /meet-greet. No “Book/Subscribe” actions appear for new visitors.
+
+The Schedule page renders a 4-step flow; fields are large and tappable; duration auto-fills by service; “Send Request” opens a prepared email.
+
+Header is sticky; content isn’t hidden under it.
+
+Lighthouse mobile tap targets pass.
+
+Make these edits and refactor with TypeScript + Tailwind only. Do not add new DB tables. Keep code concise and production-ready.

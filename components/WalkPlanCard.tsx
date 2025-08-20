@@ -15,7 +15,7 @@ interface WalkPlanCardProps {
   subLinkMap?: Record<'2' | '3' | '5', string | undefined>
 }
 
-export default function WalkPlanCard({ walkPlan, onClick, oneTimePriceId, oneTimePaymentLink, subPriceMap, subLinkMap }: WalkPlanCardProps) {
+export default function WalkPlanCard({ walkPlan, onClick }: WalkPlanCardProps) {
   const formatDuration = (minutes: number) => {
     if (minutes < 60) {
       return `${minutes} min`
@@ -71,22 +71,10 @@ export default function WalkPlanCard({ walkPlan, onClick, oneTimePriceId, oneTim
         </div>
       </div>
       
-      <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
-        <CheckoutButton
-          label="Book This Plan"
-          priceId={oneTimePriceId}
-          paymentLink={oneTimePaymentLink}
-          mode="payment"
-          durationMinutes={walkPlan.duration === 30 ? 30 : 45}
-          className="w-full btn-primary block text-center"
-        />
-        {subPriceMap && (
-          <SubscriptionPicker
-            variant={walkPlan.duration === 30 ? '30' : '45'}
-            priceMap={subPriceMap}
-            linkMap={subLinkMap}
-          />
-        )}
+      <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+        <Link href="/meet-greet" className="w-full btn-primary block text-center">Start with Free Meet &amp; Greet</Link>
+        <p className="text-xs text-gray-600">Subscription available after meet &amp; greet.</p>
+        <p className="text-xs text-gray-600">Includes GPS tracking &amp; photo updates. New clients start with a meet &amp; greet.</p>
       </div>
     </div>
   )

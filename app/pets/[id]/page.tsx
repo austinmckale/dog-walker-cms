@@ -1,4 +1,3 @@
-import Navigation from '@/components/Navigation'
 import NewReport from '@/components/reports/NewReport'
 import Image from 'next/image'
 import { getSupabaseServer } from '@/lib/supabase/server'
@@ -48,7 +47,6 @@ export default async function PetDetailPage({ params }: { params: { id: string }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <section className="bg-white rounded-lg p-6 border">
           <div className="flex gap-6">

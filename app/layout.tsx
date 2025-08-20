@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import MobileNav from '@/components/MobileNav'
+import Navbar from '@/components/Navbar'
+import NewVisitorBanner from '@/components/NewVisitorBanner'
+import { getSupabaseServer } from '@/lib/supabase/server'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,19 +19,25 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const supabase = getSupabaseServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
+        <Navbar />
+        <main className="min-h-screen bg-gray-50 pt-16">
+          {!user && <NewVisitorBanner />}
           {children}
-          <MobileNav />
-        </div>
+        </main>
       </body>
     </html>
   )
-} 
+}
