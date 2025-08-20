@@ -1,9 +1,12 @@
 "use client"
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import SignOutButton from '@/components/SignOutButton'
 
-export default function Navbar() {
+export default function Navbar({ initialAuthed = false }: { initialAuthed?: boolean }) {
   const [open, setOpen] = useState(false)
+  const [isAuthed, setIsAuthed] = useState(initialAuthed)
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -21,16 +24,39 @@ export default function Navbar() {
     return () => document.removeEventListener('click', onClick)
   }, [open])
 
+  // Auth state for showing/hiding nav items
+  useEffect(() => {
+    let mounted = true
+    supabase.auth.getUser().then(({ data }) => {
+      if (!mounted) return
+      setIsAuthed(!!data.user)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsAuthed(!!session?.user)
+    })
+    return () => {
+      mounted = false
+      sub.subscription.unsubscribe()
+    }
+  }, [])
+
   return (
     <header className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur border-b">
       <nav className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
         <Link href="/" className="font-semibold">Pawsome Walks</Link>
 
         {/* Desktop */}
-        <div className="hidden md:flex gap-6">
+        <div className="hidden md:flex gap-6 items-center">
           <Link href="/walk-plans" className="hover:underline">Walk Plans</Link>
           <Link href="/schedule" className="hover:underline">Schedule</Link>
-          <Link href="/signin" className="hover:underline">Sign In</Link>
+          {isAuthed ? (
+            <>
+              <Link href="/pets" className="hover:underline">Pets</Link>
+              <SignOutButton />
+            </>
+          ) : (
+            <Link href="/signin" className="hover:underline">Sign In</Link>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -64,7 +90,14 @@ export default function Navbar() {
               <Link onClick={() => setOpen(false)} href="/walk-plans" className="hover:underline">Walk Plans</Link>
               <Link onClick={() => setOpen(false)} href="/schedule" className="hover:underline">Schedule</Link>
               <Link onClick={() => setOpen(false)} href="/meet-greet" className="rounded-md bg-blue-600 text-white px-3 py-2 text-center">Book Free Meet &amp; Greet</Link>
-              <Link onClick={() => setOpen(false)} href="/signin" className="text-center hover:underline">Sign In</Link>
+              {isAuthed ? (
+                <>
+                  <Link onClick={() => setOpen(false)} href="/pets" className="text-center hover:underline">Pets</Link>
+                  <button onClick={() => { setOpen(false); supabase.auth.signOut() }} className="btn-secondary">Sign out</button>
+                </>
+              ) : (
+                <Link onClick={() => setOpen(false)} href="/signin" className="text-center hover:underline">Sign In</Link>
+              )}
             </div>
           </div>
         </>

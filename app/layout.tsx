@@ -32,7 +32,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navbar />
+        <Navbar initialAuthed={!!user} />
         <main className="min-h-screen bg-gray-50 pt-16">
           {!user && <NewVisitorBanner />}
           {children}
